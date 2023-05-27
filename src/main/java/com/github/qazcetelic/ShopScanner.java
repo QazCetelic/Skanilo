@@ -16,6 +16,14 @@ import java.util.regex.Pattern;
 
 public class ShopScanner {
     
+    private static boolean enabled = false;
+    public static void toggle() {
+        enabled = !enabled;
+    }
+    public static boolean isEnabled() {
+        return enabled;
+    }
+    
     @SideOnly(Side.CLIENT)
     private static Optional<ShopData> parseSign(TileEntitySign sign) {
         String shopText = "[Shop]";
@@ -64,7 +72,7 @@ public class ShopScanner {
     public static int failedScanAttempts = 0;
     public static LocalDateTime lastScan = null;
     public static void scanChunk(BlockPos chunkPos) {
-        if (!scannedChunks.contains(chunkPos)) {
+        if (!scannedChunks.contains(chunkPos) && isEnabled()) {
             try {
                 World world = Minecraft.getMinecraft().world;
                 for (int x = 0; x < CHUNK_SIZE; x++) {

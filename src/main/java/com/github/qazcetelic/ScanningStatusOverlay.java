@@ -13,12 +13,19 @@ import java.time.format.DateTimeFormatter;
 public class ScanningStatusOverlay {
     private static final int TEXT_COLOR = 0xFFFFFF;
     private static final int TEXT_DISTANCE = 10;
-    private static final int TEXT_Y = 10;
+    private static final int TEXT_Y = 0;
+    private static boolean enabled = true;
+    
+    public static void toggle() {
+        enabled = !enabled;
+    }
     
     @SubscribeEvent
     public static void onRenderGameOverlay(RenderGameOverlayEvent.Pre event) {
         if (event.getType() == RenderGameOverlayEvent.ElementType.TEXT) {
-            renderTextOverlay();
+            if (enabled) {
+                renderTextOverlay();
+            }
         }
     }
     
@@ -27,7 +34,8 @@ public class ScanningStatusOverlay {
         FontRenderer fontRenderer = mc.fontRenderer;
         
         String timeString = ShopScanner.lastScan == null ? "never" : ShopScanner.lastScan.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-        String scanningStatus = String.format("Last scan %s", timeString);
+        String scanningEnabled = ShopScanner.isEnabled() ? "enabled" : "disabled";
+        String scanningStatus = String.format("Scanning %s, last scan %s", scanningEnabled, timeString);
         fontRenderer.drawString(scanningStatus, 10, 1 * TEXT_DISTANCE + TEXT_Y, TEXT_COLOR);
         String scannedInfo = String.format("Scanned %d chunks containing %d shops", ShopScanner.scannedChunks.size(), ShopData.shops.size());
         fontRenderer.drawString(scannedInfo, 10, 2 * TEXT_DISTANCE + TEXT_Y, TEXT_COLOR);
