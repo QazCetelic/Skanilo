@@ -9,6 +9,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -59,26 +60,40 @@ public class ShopScanner {
     }};
     
     public static final int CHUNK_SIZE = 16;
+    public static final Set<BlockPos> scannedChunks = new HashSet<>();
+    public static int failedScanAttempts = 0;
+    public static LocalDateTime lastScan = null;
     public static void scanChunk(BlockPos chunkPos) {
-        World world = Minecraft.getMinecraft().world;
-        for (int x = 0; x < CHUNK_SIZE; x++) {
-            for (int y = 0; y < 256; y++) {
-                for (int z = 0; z < CHUNK_SIZE; z++) {
-                    BlockPos pos = new BlockPos(chunkPos.getX() * CHUNK_SIZE + x, y, chunkPos.getZ() * CHUNK_SIZE + z);
-                    if (sign_blocks.contains(world.getBlockState(pos).getBlock())) {
-                        TileEntity tileEntity = world.getTileEntity(pos);
-                        if (tileEntity instanceof TileEntitySign) {
-                            SkaniloMod.LOGGER.info("Found sign at " + pos);
-                            TileEntitySign sign = (TileEntitySign) tileEntity;
-                            parseSign(sign).ifPresent(data -> {
-                                ShopData.shops.put(sign.getPos(), data);
-                                SkaniloMod.LOGGER.info("Found shop sign at " + sign.getPos().getX() + ", " + sign.getPos().getY() + ", " + sign.getPos().getZ());
-                            });
+        if (!scannedChunks.contains(chunkPos)) {
+            try {
+                World world = Minecraft.getMinecraft().world;
+                for (int x = 0; x < CHUNK_SIZE; x++) {
+                    for (int y = 0; y < 256; y++) {
+                        for (int z = 0; z < CHUNK_SIZE; z++) {
+                            BlockPos pos = new BlockPos(chunkPos.getX() * CHUNK_SIZE + x, y, chunkPos.getZ() * CHUNK_SIZE + z);
+                            if (sign_blocks.contains(world.getBlockState(pos).getBlock())) {
+                                TileEntity tileEntity = world.getTileEntity(pos);
+                                if (tileEntity instanceof TileEntitySign) {
+                                    SkaniloMod.LOGGER.info("Found sign at " + pos);
+                                    TileEntitySign sign = (TileEntitySign) tileEntity;
+                                    parseSign(sign).ifPresent(data -> {
+                                        ShopData.shops.put(sign.getPos(), data);
+                                        SkaniloMod.LOGGER.info("Found shop sign at " + sign.getPos().getX() + ", " + sign.getPos().getY() + ", " + sign.getPos().getZ());
+                                    });
+                                }
+                            }
                         }
                     }
                 }
+                SkaniloMod.LOGGER.info("Scanned chunk " + chunkPos.getX() + ", " + chunkPos.getZ());
+                lastScan = LocalDateTime.now();
+                scannedChunks.add(chunkPos);
+            }
+            catch (Exception e) {
+                SkaniloMod.LOGGER.error("Error while scanning chunk " + chunkPos.getX() + ", " + chunkPos.getZ());
+                failedScanAttempts++;
+                e.printStackTrace();
             }
         }
-        SkaniloMod.LOGGER.info("Scanned chunk " + chunkPos.getX() + ", " + chunkPos.getZ());
     }
 }

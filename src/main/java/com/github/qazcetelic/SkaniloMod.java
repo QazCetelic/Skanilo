@@ -1,6 +1,7 @@
 package com.github.qazcetelic;
 
 import net.minecraft.client.Minecraft;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
@@ -43,6 +44,8 @@ public class SkaniloMod
      */
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
+        MinecraftForge.EVENT_BUS.register(ScanningStatusOverlay.class);
+        
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             File shopsFolder = new File(Minecraft.getMinecraft().mcDataDir, "shops");
             if (shopsFolder.mkdir()) {
